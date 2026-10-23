@@ -146,6 +146,14 @@ img{display:block;max-width:100%}
 .refs-res b{font:500 16px var(--ui)}
 .refs-res span{font:500 14px var(--ui);color:var(--mute);text-align:right}
 
+/* ---------- botão voltar ---------- */
+.topo{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:20px}
+.topo .crumb{padding:0}
+.voltar{display:inline-flex;align-items:center;gap:10px;font:500 15px var(--ui);padding-right:14px;border-radius:30px;transition:background .15s}
+.voltar:hover{background:var(--cloud)}
+.voltar .ico{width:40px;height:40px}
+@media (max-width:767px){.topo .crumb{display:none}}
+
 /* ---------- marca ---------- */
 .mhead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding:24px 0 32px}
 .mhead .cap{margin-top:12px}
@@ -297,7 +305,7 @@ async function conectar(){
   return false;
 }
 function telaOffline(app){
-  app.innerHTML='<div class="wrap msg"><p class="eyebrow" style="margin-bottom:16px">Catálogo Calçados 24h</p><div class="disp" style="font-size:clamp(56px,9vw,96px)">Voltamos já</div><p>O catálogo está fora do ar neste momento. Ele fica disponível quando o computador da loja está ligado.</p><p style="margin-top:28px"><button class="btn btn-p" id="tentar">Tentar de novo</button></p></div>';
+  app.innerHTML='<div class="wrap msg"><p class="eyebrow" style="margin-bottom:16px">Catálogo Calçados 24h</p><div class="disp" style="font-size:clamp(56px,9vw,96px)">Voltamos já</div><p>O catálogo está temporariamente indisponível. Tente novamente em alguns minutos.</p><p style="margin-top:28px"><button class="btn btn-p" id="tentar">Tentar de novo</button></p></div>';
   $('#tentar').onclick=()=>rota();
 }
 async function rota(){
@@ -394,7 +402,7 @@ async function telaMarca(app,s){
   const m=await getMarca(s);
   document.title=m.n+' · Catálogo · Calçados 24h';
   app.innerHTML=`<div class="wrap">
-    <div class="crumb"><a href="#/">Marcas</a> / ${esc(m.n)}</div>
+    <div class="topo"><a class="voltar" href="#/"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></span>Voltar para as marcas</a><div class="crumb"><a href="#/">Marcas</a> / ${esc(m.n)}</div></div>
     <div class="mhead"><div><h1 class="disp">${esc(m.n)}</h1><div class="cap">${plural(m.refs.length,'modelo','modelos')} · do mais novo para o mais antigo</div></div></div>
     <div class="mbar"><label class="search">${IC_BUSCA}<input id="mq" type="search" placeholder="Buscar referência nesta marca" autocomplete="off"></label><span class="cap" id="mcont"></span></div>
     <div class="grid" id="mgrid"></div></div>`;
@@ -425,7 +433,7 @@ async function telaRef(app,s,rs){
   document.title=r.r+' · '+m.n+' · Calçados 24h';
   const outras=m.refs.slice(Math.max(0,pos-5),pos).concat(m.refs.slice(pos+1,pos+11)).slice(0,10);
   app.innerHTML=`<div class="wrap">
-    <div class="crumb"><a href="#/">Marcas</a> / <a href="#/m/${m.s}">${esc(m.n)}</a> / ${esc(r.r)}</div>
+    <div class="topo"><a class="voltar" href="#/m/${m.s}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></span>Voltar para ${esc(m.n)}</a><div class="crumb"><a href="#/">Marcas</a> / <a href="#/m/${m.s}">${esc(m.n)}</a> / ${esc(r.r)}</div></div>
     <div class="rlay">
       <div class="fotos">${r.f.map((f,i)=>`<button data-i="${i}" aria-label="Ampliar foto ${i+1}"><img data-src="${foto(f.t)}" alt="${esc(r.r)} foto ${i+1}" loading="lazy"></button>`).join('')}</div>
       <aside class="painel">
