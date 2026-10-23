@@ -260,10 +260,10 @@ function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clea
 function imgOk(root){root.querySelectorAll('img[data-src]').forEach(i=>{i.onload=()=>i.classList.add('ok');i.onerror=()=>i.classList.add('ok');i.src=i.dataset.src;i.removeAttribute('data-src')})}
 
 async function getIdx(){
-  if(S.idx) return S.idx;
+  if(S.idx&&Date.now()-S.idxEm<60000) return S.idx;
   const r=await fetch(BASE+'/data/index.json',{cache:'no-cache'});
   if(!r.ok) throw new Error('vazio');
-  S.idx=await r.json();
+  S.idx=await r.json();S.idxEm=Date.now();S.marcas={};
   S.idx.marcas=S.idx.marcas.filter(m=>m.q>0&&!m.h);
   if(!S.idx.marcas.length) throw new Error('vazio');
   S.idx.marcas.sort((a,b)=>a.n.localeCompare(b.n,'pt-BR'));
@@ -272,13 +272,13 @@ async function getIdx(){
   return S.idx;
 }
 async function getMarca(s){
-  if(S.marcas[s]) return S.marcas[s];
+  if(S.marcas[s]&&Date.now()-S.marcas[s]._em<60000) return S.marcas[s];
   const r=await fetch(BASE+'/data/m/'+s+'.json',{cache:'no-cache'});
   if(!r.ok) throw new Error('nao');
   const m=await r.json();
   if(m.oculta) throw new Error('nao');
   m.refs=m.refs.filter(x=>x.f&&x.f.length&&!x.oc);
-  return S.marcas[s]=m;
+  m._em=Date.now();return S.marcas[s]=m;
 }
 
 /* ---------------- rotas ---------------- */
