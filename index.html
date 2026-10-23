@@ -252,7 +252,7 @@ const lerPref=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}};
 const salvarPref=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const IC_BUSCA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 $('#ano').textContent=new Date().getFullYear();
-if(REMOTO) $('#link-admin').remove();
+if(REMOTO) $('#link-admin').classList.add('hidden');
 
 const S={idx:null,marcas:{},modo:lerPref('modo','grade'),q:''};
 
@@ -299,7 +299,7 @@ async function conectar(){
       if(!url||tentados.has(url))continue;tentados.add(url);
       const r=await comTempo(url+'/api/ping',12000);
       await r.text();if(!r.ok)continue;
-      BASE=url;return true;
+      BASE=url;$('#link-admin').href=BASE+'/admin';$('#link-admin').classList.remove('hidden');return true;
     }catch(e){}
   }
   return false;
