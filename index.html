@@ -299,7 +299,7 @@ async function conectar(){
       if(!url||tentados.has(url))continue;tentados.add(url);
       const r=await comTempo(url+'/api/ping',12000);
       await r.text();if(!r.ok)continue;
-      BASE=url;$('#link-admin').href=BASE+'/admin';$('#link-admin').classList.remove('hidden');return true;
+      BASE=url;$('#link-admin').href='admin.html';$('#link-admin').classList.remove('hidden');return true;
     }catch(e){}
   }
   return false;
