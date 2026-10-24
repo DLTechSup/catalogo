@@ -168,6 +168,8 @@ img{display:block;max-width:100%}
 .pl .cap{font-size:14px}
 .tag{font:500 12px var(--ui);padding:4px 12px;border-radius:30px;border:1px solid var(--hair);white-space:nowrap}
 .tag.r{color:var(--sale);border-color:#f0b4b5}
+.pl .mot{grid-column:1/-1;font:400 14px/1.5 var(--ui);color:var(--charcoal);margin-top:-6px}
+.pl .mot b{font-weight:600}
 
 
 .sw{position:relative;width:48px;height:28px;flex:none;cursor:pointer}
@@ -329,7 +331,7 @@ img{display:block;max-width:100%}
 
 <!-- PENDÊNCIAS -->
 <section class="wrap hidden" id="t-pend">
-  <div class="adm-h"><div><h1 class="disp">Pendências</h1><p class="cap" style="margin-top:12px">Referências sem fotos, sem fotos com código e pastas fora do lugar.</p></div><button class="btn btn-s btn-sm" id="b-atual">Ler a pasta de novo</button></div>
+  <div class="adm-h"><div><h1 class="disp">Pendências</h1><p class="cap" style="margin-top:12px">O que não aparece no site e o motivo de cada um.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" id="b-atual">Ler a pasta de novo</button><button class="btn btn-p btn-sm" id="b-rel">Baixar relatório</button></div></div>
   <div class="pend-f" id="pf"></div>
   <div class="pend" id="pl"></div>
 </section>
@@ -554,25 +556,34 @@ async function modelos(el,m){
 let tV;$('#vq').addEventListener('input',()=>{clearTimeout(tV);tV=setTimeout(visibilidade,200)});
 
 /* ---------- pendências ---------- */
-let PF='sem';
+let PF='marcas';
 async function pendencias(){
-  const alvo=IDX.marcas.filter(m=>(m.p||0)+(m.sc||0)>0);
   $('#pl').innerHTML='<p class="cap" style="padding:24px 0">Carregando…</p>';
-  const itens=[];
-  await Promise.all(alvo.map(async m=>{const j=await marcaJSON(m.s);if(!j)return;j.refs.forEach(r=>{if(!r.f.length)itens.push({m:j,r,t:'sem'});else if(!r.cod)itens.push({m:j,r,t:'cod'})})}));
-  let avisos=[];try{avisos=(await api('avisos')).avisos}catch(e){}
-  itens.sort((a,b)=>a.m.n.localeCompare(b.m.n,'pt-BR')||a.r.r.localeCompare(b.r.r,'pt-BR',{numeric:true}));
-  const ns=itens.filter(i=>i.t==='sem').length,nc=itens.length-ns;
-  $('#pf').innerHTML=`<button class="chip ${PF==='sem'?'on':''}" data-f="sem">Sem fotos (${ns})</button><button class="chip ${PF==='cod'?'on':''}" data-f="cod">Sem fotos com código (${nc})</button><button class="chip ${PF==='org'?'on':''}" data-f="org">Pastas fora do lugar (${avisos.length})</button>`;
+  let d;try{d=await api('diagnostico')}catch(e){$('#pl').innerHTML='<p class="cap">'+esc(e.message)+'</p>';return}
+  const sem=d.refs.filter(x=>x.tipo==='sem'),cod=d.refs.filter(x=>x.tipo==='cod');
+  const nb=d.marcas_fora.length+sem.length;$('#nb').textContent=nb;$('#nb').classList.toggle('hidden',!nb);
+  $('#pf').innerHTML=[['marcas','Marcas fora do site',d.marcas_fora.length],['sem','Referências sem fotos',sem.length],['org','Pastas fora do lugar',d.avisos.length],['cod','Só fotos limpas',cod.length]].map(([k,t,n])=>`<button class="chip ${PF===k?'on':''}" data-f="${k}">${t} (${n})</button>`).join('');
   $('#pf').querySelectorAll('button').forEach(b=>b.onclick=()=>{PF=b.dataset.f;pendencias()});
-  if(PF==='org'){
-    $('#pl').innerHTML=avisos.map(([t,m,r])=>`<div class="pl"><b>${esc(r||m)}</b><span class="cap">${esc(r?m:'')}</span><span class="tag r">${esc(t)}</span><span></span></div>`).join('')||'<div class="msg"><div class="h-xl">Tudo organizado</div></div>';
+  const vazio=t=>`<div class="msg"><div class="h-xl">${t}</div></div>`;
+  if(PF==='marcas'){
+    $('#pl').innerHTML=d.marcas_fora.map(x=>`<div class="pl"><b>${esc(x.n)}</b><span></span><span class="tag r">Fora do site</span><span></span><div class="mot"><b>Motivo:</b> ${esc(x.motivo)}</div></div>`).join('')||vazio('Todas as marcas estão no site');
     return;
   }
-  const vis=itens.filter(i=>i.t===PF);
-  $('#pl').innerHTML=vis.map(i=>`<div class="pl"><b>${esc(i.r.r)}</b><span class="cap">${esc(i.m.n)}</span><span class="tag ${i.t==='sem'?'r':''}">${i.t==='sem'?'Sem fotos':'Só fotos limpas'}</span><button class="btn btn-s btn-sm" data-m="${esc(i.m.n)}" data-r="${esc(i.r.r)}">Resolver</button></div>`).join('')||'<div class="msg"><div class="h-xl">Tudo em dia</div><p>Nenhuma referência nesta lista.</p></div>';
+  if(PF==='org'){
+    $('#pl').innerHTML=d.avisos.map(([t,m,r])=>`<div class="pl"><b>${esc(r||m)}</b><span class="cap">${esc(r?m:'')}</span><span></span><span></span><div class="mot">${esc(t)}</div></div>`).join('')||vazio('Tudo organizado');
+    return;
+  }
+  const lista=PF==='sem'?sem:cod;
+  $('#pl').innerHTML=lista.map(x=>`<div class="pl"><b>${esc(x.r)}</b><span class="cap">${esc(x.m)}</span><span class="tag ${x.tipo==='sem'?'r':''}">${x.tipo==='sem'?'Sem fotos':'Só fotos limpas'}</span><button class="btn btn-s btn-sm" data-m="${esc(x.m)}" data-r="${esc(x.r)}">Resolver</button>${x.motivo?`<div class="mot"><b>${x.tipo==='sem'?'Motivo':'Obs.'}:</b> ${esc(x.motivo)}</div>`:''}</div>`).join('')||vazio('Tudo em dia');
   $('#pl').querySelectorAll('button[data-r]').forEach(b=>b.onclick=()=>{aba('enviar');$('#marca').value=b.dataset.m;$('#ref').value=b.dataset.r;checar();window.scrollTo({top:0,behavior:'smooth'})});
 }
+$('#b-rel').onclick=async()=>{
+  try{
+    const r=await fetch(BASE+'/api/relatorio',{headers:{'Authorization':'Bearer '+TOKEN}});
+    if(!r.ok) throw new Error('Não consegui gerar o relatório');
+    const a=document.createElement('a');a.href=URL.createObjectURL(await r.blob());a.download='relatorio-catalogo.txt';document.body.appendChild(a);a.click();a.remove();
+  }catch(e){toast(e.message)}
+};
 $('#b-atual').onclick=async()=>{try{const r=await api('atualizar',{method:'POST'});toast('Pasta lida: '+r.marcas+' marcas, '+r.refs+' referências');await carregarIndice();pendencias()}catch(e){toast(e.message)}};
 
 /* ---------- usuários ---------- */
